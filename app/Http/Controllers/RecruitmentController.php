@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\RecruitmentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * 募集情報に関する処理を実行するコントローラー
@@ -66,6 +66,15 @@ class RecruitmentController extends Controller
             'place' => 'required|string|max:255',
             'capacity' => 'required|integer|min:1',
         ]);
+        // 相関チェック: 開催日が期限より後かを確認
+        Validator::make($data, [
+            'event_date' => function ($attribute, $value, $fail) use ($data) {
+                if (isset($data['deadline']) && $value <= $data['deadline']) {
+                    $fail('開催日は募集期限より後の日付を設定してください。');
+                }
+            },
+        ])->validate();
+
         $recruitment = $this->recruitmentService->createRecruitment($data);
         return response()->json($recruitment, 201);
     }
