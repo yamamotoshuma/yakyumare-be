@@ -28,15 +28,15 @@ jobs:
       # 3. リモートサーバーにSSH接続してgit pullを実行
       - name: Pull latest code from git repository
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cd /home/ordermade/yakyumare-be && git pull origin production'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_HOST }} 'cd /home/ordermade/yakyumare-be && git pull origin production'
 
       # 4. キャッシュ関連の処理
       - name: Clear cache and optimize
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cd /home/ordermade/yakyumare-be && php artisan cache:clear && php artisan config:cache && php artisan route:cache'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_HOST }} 'cd /home/ordermade/yakyumare-be && php artisan cache:clear && php artisan config:cache && php artisan route:cache'
 
       # 5. マイグレーションがあれば実行
       - name: Run migrations if available
         if: ${{ steps.migrations_check.outputs.migrations == 'true' }}
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'cd /home/ordermade/yakyumare-be && php artisan migrate --force'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.REMOTE_SERVER_HOST }} 'cd /home/ordermade/yakyumare-be && php artisan migrate --force'
