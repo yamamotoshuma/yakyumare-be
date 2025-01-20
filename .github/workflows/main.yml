@@ -13,7 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. paths-filterアクションを使用して、特定のディレクトリに変更があったかを確認
+      # 1. リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. paths-filterアクションを使用して、特定のディレクトリに変更があったかを確認
       - name: Check for changes in 'database/migrations/'
         id: migrations_check
         uses: dorny/paths-filter@v2
@@ -22,7 +26,7 @@ jobs:
             migrations:
               - 'database/migrations/**'
 
-      # 2. SSHキーを設定
+      # 3. SSHキーを設定
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -30,15 +34,15 @@ jobs:
           name: id_rsa
           known_hosts: ${{ secrets.SSH_HOST }}
 
-      # 3. リモートサーバーにSSH接続してgit pullを実行
+      # 4. リモートサーバーにSSH接続してgit pullを実行
       - name: Pull latest code from git repository
         run: cd /home/ordermade/yakyumare-be && git pull origin production
 
-      # 4. キャッシュ関連の処理
+      # 5. キャッシュ関連の処理
       - name: Clear cache and optimize
         run: cd /home/ordermade/yakyumare-be && php artisan cache:clear && php artisan config:cache && php artisan route:cache
 
-      # 5. マイグレーションがあれば実行
+      # 6. マイグレーションがあれば実行
       - name: Run migrations if available
         if: ${{ steps.migrations_check.outputs.migrations == 'true' }}
         run: cd /home/ordermade/yakyumare-be && php artisan migrate --force
