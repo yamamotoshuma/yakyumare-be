@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
-    //
     protected $commentService;
 
     public function __construct(CommentService $commentService)
