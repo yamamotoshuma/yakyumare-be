@@ -12,35 +12,46 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      SSH_USER: ${{ secrets.SSH_USER }}
-      REMOTE_SERVER: ${{ secrets.REMOTE_SERVER_HOST }}
-
     steps:
       # 1. リポジトリをチェックアウト
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. SSHキーを設定
-      - name: Install SSH key
-        uses: shimataro/ssh-key-action@v2
-        with:
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          name: id_rsa
-          known_hosts: ${{ secrets.SSH_HOST }}
-
-      # 3. リモートサーバーにSSH接続してgit pullを実行
+      # 2. リモートサーバーにSSH接続してgit pullを実行
       - name: Pull latest code from git repository
-        run: |
-          ssh ${{ env.SSH_USER }}@${{ env.REMOTE_SERVER }} 'cd /home/ordermade/yakyumare-be && git pull origin production'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.REMOTE_SERVER_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/ordermade/yakyumare-be
+            git pull origin production
 
-      # 4. キャッシュ関連の処理
+      # 3. キャッシュ関連の処理
       - name: Clear cache and optimize
-        run: |
-          ssh ${{ env.SSH_USER }}@${{ env.REMOTE_SERVER }} 'cd /home/ordermade/yakyumare-be && php artisan cache:clear && php artisan config:cache && php artisan route:cache'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.REMOTE_SERVER_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/ordermade/yakyumare-be
+            php artisan cache:clear
+            php artisan config:cache
+            php artisan route:cache
 
-      # 5. マイグレーションがあれば実行
+      # 4. マイグレーションがあれば実行
       - name: Run migrations if available
         if: ${{ steps.migrations_check.outputs.migrations == 'true' }}
-        run: |
-          ssh ${{ env.SSH_USER }}@${{ env.REMOTE_SERVER }} 'cd /home/ordermade/yakyumare-be && php artisan migrate --force'
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.REMOTE_SERVER_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            cd /home/ordermade/yakyumare-be
+            php artisan migrate --force
