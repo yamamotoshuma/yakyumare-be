@@ -17,7 +17,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. リモートサーバーにSSH接続してgit pullを実行
+      # 2. paths-filterアクションを使用して、特定のディレクトリに変更があったかを確認
+      - name: Check for changes in 'database/migrations/'
+        id: migrations_check
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            migrations:
+              - 'database/migrations/**'
+
+      # 3. リモートサーバーにSSH接続してgit pullを実行
       - name: Pull latest code from git repository
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -29,7 +38,7 @@ jobs:
             cd /home/ordermade/yakyumare-be
             git pull origin production
 
-      # 3. キャッシュ関連の処理
+      # 4. キャッシュ関連の処理
       - name: Clear cache and optimize
         uses: appleboy/ssh-action@v1.2.0
         with:
@@ -43,7 +52,7 @@ jobs:
             php artisan config:cache
             php artisan route:cache
 
-      # 4. マイグレーションがあれば実行
+      # 5. マイグレーションがあれば実行
       - name: Run migrations if available
         if: ${{ steps.migrations_check.outputs.migrations == 'true' }}
         uses: appleboy/ssh-action@v1.2.0
