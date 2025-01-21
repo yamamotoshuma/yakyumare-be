@@ -24,10 +24,14 @@ class NotificationTokenController extends Controller
         }
 
         // トークンをデータベースに保存
-        NotificationToken::updateOrCreate(
-            ['user_id' => $user->id],
-            ['token' => $request->token]
-        );
+        $notificationToken = NotificationToken::where('user_id', $user->id)->where('token', $request->token)->first();
+
+        if (!$notificationToken) {
+            NotificationToken::create([
+                'user_id' => $user->id,
+                'token' => $request->token
+            ]);
+        }
 
         return response()->json(['message' => 'Token saved successfully.'], 201);
     }

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\NotificationToken;
-use App\Models\User;
 use App\Repositories\ApplicationRepository;
 use App\Repositories\MessageRepository;
 use App\Repositories\RecruitmentRepository;
@@ -11,10 +10,8 @@ use App\Repositories\TalkRepository;
 use App\Repositories\TalkUserRepository;
 use App\Utils\MailUtil;
 use App\Utils\NotificationUtil;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  * トーク情報に関する処理を実行するサービス

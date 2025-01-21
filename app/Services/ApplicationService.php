@@ -10,7 +10,8 @@ use App\Repositories\TalkRepository;
 use App\Repositories\TalkUserRepository;
 use App\Utils\MailUtil;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Utils\NotificationUtil;
+use App\Models\NotificationToken;
 
 /**
  * 応募情報に関する処理を実行するサービス
@@ -56,9 +57,12 @@ class ApplicationService
             // 応募のメール通知
             $user = User::find($data['recruited_user_id']);
             $subject = '新規の応募がありました';
-            $message = "「" . $recruitment->title . "」\n新規の応募がありました。\n" . "確認してください。";
+            $title = $recruitment->title;
+            $message = "「" . $title . "」\n新規の応募がありました。\n" . "確認してください。";
             $url = config('frontend.url') . '/message';
+
             $this->sendApplyMail($user->email, $subject, $message, $url);
+            $this->sendNotification($user->id, $title, $subject);
         });
     }
 
@@ -76,9 +80,12 @@ class ApplicationService
             $application = $this->applicationRepository->getApplication($data['id']);
 
             $subject = '応募が' . $approval . 'されました';
-            $message = "「" . $application->recruitment->title . "」\n応募が". $approval ."されました。\n" . "確認してください。";
+            $title = $application->recruitment->title;
+            $message = "「" . $title . "」\n応募が". $approval ."されました。\n" . "確認してください。";
             $url = config('frontend.url') . '/message';
+
             $this->sendApplyMail($application->apply_user->email, $subject, $message, $url);
+            $this->sendNotification($application->apply_user_id, $title, $subject);
         });
     }
 
@@ -90,6 +97,18 @@ class ApplicationService
         ];
 
         MailUtil::sendNotificationMail($to, $data);
+    }
+
+    private function sendNotification($userId, $title , $content){
+        $tokens = NotificationToken::where('user_id', $userId)->get();
+
+        if ($tokens->isEmpty()) {
+            return;
+        }
+
+        foreach ($tokens as $token) {
+            NotificationUtil::handle($token->token, $title, $content, '/message');
+        }
     }
 }
 
